@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SegDAn · Proyecto ADER 2022-I-IDI-00015</title>
+<meta name="description" content="SegDAn: motor para la segmentación semántica, la segmentación de instancias y la detección de anomalías en imágenes como soporte para la transformación digital de la industria. Universidad de La Rioja. Proyecto ADER 2022-I-IDI-00015.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f4ef; --surface:#ffffff; --ink:#1b1f23; --muted:#5b6168; --line:#dcd8cf;
+  --accent:#0e6b5c; --accent-ink:#ffffff; --accent-soft:#e3efeb; --warm:#b5532a;
+  --mask1:#0e6b5c; --mask2:#d9a441; --mask3:#b5532a;
+  --maxw:1120px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121517; --surface:#1a1e21; --ink:#e9e7e2; --muted:#a2a8ad; --line:#2c3236;
+    --accent:#4fb8a3; --accent-ink:#0b1412; --accent-soft:#1c2e2a; --warm:#e08a5f;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121517; --surface:#1a1e21; --ink:#e9e7e2; --muted:#a2a8ad; --line:#2c3236;
+  --accent:#4fb8a3; --accent-ink:#0b1412; --accent-soft:#1c2e2a; --warm:#e08a5f;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.92em}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:650;line-height:1.15;letter-spacing:-.01em;margin:0}
+h2{font-size:clamp(1.6rem,3.2vw,2.2rem);margin-bottom:.6rem}
+h3{font-size:1.15rem}
+.eyebrow{font:500 .78rem/1 "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--warm);margin-bottom:.9rem}
+.lead{color:var(--muted);max-width:62ch;font-size:1.05rem}
+
+/* nav */
+header.top{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:20px;height:60px}
+.brand{font-family:Fraunces,serif;font-weight:650;font-size:1.25rem;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px}
+.brand svg{width:26px;height:26px}
+nav.main{margin-left:auto;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.main a{color:var(--muted);text-decoration:none;font-size:.9rem;padding:6px 10px;border-radius:6px;white-space:nowrap}
+nav.main a:hover{color:var(--ink);background:var(--accent-soft)}
+.theme-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;width:34px;height:34px;cursor:pointer;flex:none}
+@media (max-width:860px){nav.main{display:none}.theme-btn{margin-left:auto}}
+
+/* hero */
+.hero{padding:72px 0 56px;border-bottom:1px solid var(--line)}
+.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.hero h1{font-size:clamp(2.2rem,5.4vw,3.9rem);margin-bottom:1.1rem}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p.sub{font-size:1.12rem;color:var(--muted);max-width:56ch;margin:0 0 1.6rem}
+.cta{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;font-weight:500;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:var(--surface)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:1.8rem;font-size:.86rem;color:var(--muted)}
+.meta-row b{color:var(--ink);font-weight:600}
+.fig{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.fig svg{display:block;width:100%;height:auto}
+.fig figcaption{font-size:.8rem;color:var(--muted);margin-top:8px;display:flex;justify-content:space-between}
+@media (max-width:860px){.hero .wrap{grid-template-columns:1fr}.hero{padding:44px 0 36px}}
+
+section{padding:72px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+.sec-head{display:grid;grid-template-columns:1fr 1.4fr;gap:40px;margin-bottom:36px;align-items:end}
+@media (max-width:860px){.sec-head{grid-template-columns:1fr;gap:10px}section{padding:52px 0}}
+
+/* objectives */
+.objs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.obj{background:var(--surface);padding:22px}
+.obj .n{font:500 .8rem "IBM Plex Mono",monospace;color:var(--warm)}
+.obj h3{margin:.4rem 0 .4rem;font-size:1.05rem}
+.obj p{margin:0;color:var(--muted);font-size:.92rem}
+
+/* tools */
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+.tool{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px}
+.tool .tag{font:500 .72rem "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:4px;align-self:flex-start}
+.tool h3{font-size:1.35rem}
+.tool p{margin:0;color:var(--muted);font-size:.93rem}
+.tool .links{margin-top:auto;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.88rem;padding-top:8px;border-top:1px dashed var(--line)}
+.tool.main{grid-column:1/-1;display:grid;grid-template-columns:1.1fr .9fr;gap:28px}
+.tool.main .col{display:flex;flex-direction:column;gap:10px}
+.tool.main ol{margin:0;padding-left:1.2rem;color:var(--muted);font-size:.93rem}
+@media (max-width:860px){.tool.main{grid-template-columns:1fr}.tools{grid-template-columns:1fr}}
+pre.install{margin:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font:400 .88rem "IBM Plex Mono",monospace}
+
+/* use cases */
+.cases{display:grid;grid-template-columns:repeat(3,1fr);gap:28px 22px}
+@media (max-width:860px){.cases{grid-template-columns:1fr}}
+.case{border-left:3px solid var(--accent);padding:4px 0 4px 16px}
+.case h3{font-size:1.05rem;margin-bottom:.3rem}
+.case p{margin:0;color:var(--muted);font-size:.92rem}
+.case .who{font-size:.8rem;color:var(--warm);margin-top:.4rem}
+
+/* publications */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.filters button{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pubs{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.pubs li{display:grid;grid-template-columns:64px 1fr auto;gap:18px;padding:16px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.pubs .yr{font:500 .9rem "IBM Plex Mono",monospace;color:var(--muted)}
+.pubs .t{font-weight:600}
+.pubs .a{color:var(--muted);font-size:.9rem}
+.pubs .v{font-size:.9rem;font-style:italic}
+.pubs .kind{font:500 .7rem "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);white-space:nowrap}
+@media (max-width:700px){.pubs li{grid-template-columns:1fr;gap:4px}}
+
+/* team */
+.team{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.person{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;gap:14px;align-items:center}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font:600 .9rem "IBM Plex Mono",monospace;flex:none}
+.person b{display:block}
+.person span{font-size:.85rem;color:var(--muted)}
+
+/* activity timeline */
+.tl{list-style:none;margin:0;padding:0;position:relative}
+.tl:before{content:"";position:absolute;left:94px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.tl li{display:grid;grid-template-columns:80px 1fr;gap:30px;padding:10px 0;position:relative}
+.tl li:after{content:"";position:absolute;left:90px;top:18px;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--bg)}
+.tl .d{font:500 .85rem "IBM Plex Mono",monospace;color:var(--muted);text-align:right;padding-top:2px}
+.tl .e b{display:block}
+.tl .e span{color:var(--muted);font-size:.92rem}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.linklist{list-style:none;margin:0;padding:0}
+.linklist li{padding:10px 0;border-bottom:1px solid var(--line)}
+.linklist li span{display:block;color:var(--muted);font-size:.88rem}
+
+.contact{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px}
+.contact h3{font-size:1rem;margin-bottom:.4rem}
+.contact p{margin:0;color:var(--muted);font-size:.93rem}
+
+footer{padding:36px 0 48px;color:var(--muted);font-size:.86rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 32px;justify-content:space-between}
+.funding{border:1px solid var(--line);border-radius:10px;padding:14px 18px;background:var(--surface);max-width:620px}
+.funding b{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#inicio" aria-label="SegDAn, inicio">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M1 15 Q8 9 13 14 T25 11 V20 Q25 25 20 25 H6 Q1 25 1 20Z" fill="var(--accent)"/><circle cx="18" cy="7.5" r="2.6" fill="var(--warm)"/></svg>
+      SegDAn
+    </a>
+    <nav class="main" aria-label="Secciones">
+      <a href="#proyecto">Proyecto</a>
+      <a href="#herramientas">Herramientas</a>
+      <a href="#casos">Casos de uso</a>
+      <a href="#publicaciones">Publicaciones</a>
+      <a href="#actividades">Actividades</a>
+      <a href="#equipo">Equipo</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Cambiar tema claro/oscuro">◐</button>
+  </div>
+</header>
+
+<main id="inicio">
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Proyecto ADER 2022-I-IDI-00015 · Universidad de La Rioja</div>
+      <h1>Segmentación y detección de anomalías en imagen, <em>en abierto</em></h1>
+      <p class="sub">SegDAn es un motor para la segmentación semántica, la segmentación de instancias y la detección de anomalías en imágenes, pensado como soporte para la transformación digital de la industria. Integra técnicas de vanguardia, permite compararlas de forma sistemática y se incorpora fácilmente a otros desarrollos software.</p>
+      <div class="cta">
+        <a class="btn primary" href="#descargas">Descargar e instalar</a>
+        <a class="btn" href="https://github.com/joortif/SegDAN">Código en GitHub</a>
+        <a class="btn" href="#publicaciones">Publicaciones</a>
+      </div>
+      <div class="meta-row">
+        <span><b>6</b> herramientas de código abierto</span>
+        <span><b>14</b> publicaciones y comunicaciones</span>
+        <span><b>Dic 2023 – Dic 2026</b></span>
+      </div>
+    </div>
+    <figure class="fig" style="margin:0">
+      <svg viewBox="0 0 400 280" role="img" aria-label="Ilustración: una imagen con regiones segmentadas en colores y una región anómala resaltada">
+        <defs>
+          <pattern id="px" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="var(--line)" stroke-width=".6"/></pattern>
+        </defs>
+        <rect x="0" y="0" width="400" height="280" rx="8" fill="var(--bg)"/>
+        <rect x="0" y="0" width="400" height="280" rx="8" fill="url(#px)"/>
+        <path d="M0 190 Q70 150 130 175 T260 160 T400 150 V272 Q400 280 392 280 H8 Q0 280 0 272Z" fill="var(--mask1)" opacity=".85"/>
+        <path d="M60 175 C60 110 120 70 160 95 C200 120 190 170 170 180 Z" fill="var(--mask2)" opacity=".9"/>
+        <path d="M230 165 C220 110 260 60 300 80 C345 100 340 150 320 160 Z" fill="var(--mask2)" opacity=".75"/>
+        <circle cx="300" cy="215" r="20" fill="none" stroke="var(--mask3)" stroke-width="2.5" stroke-dasharray="5 4"/>
+        <circle cx="300" cy="215" r="7" fill="var(--mask3)"/>
+        <g font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink)">
+          <rect x="68" y="58" width="78" height="20" rx="4" fill="var(--surface)" stroke="var(--line)"/><text x="76" y="72">clase: hoja</text>
+          <rect x="250" y="40" width="96" height="20" rx="4" fill="var(--surface)" stroke="var(--line)"/><text x="258" y="54">instancia #2</text>
+          <rect x="236" y="244" width="120" height="20" rx="4" fill="var(--surface)" stroke="var(--warm)"/><text x="244" y="258" fill="var(--warm)">anomalía 0.93</text>
+        </g>
+      </svg>
+      <figcaption><span>Segmentación semántica · instancias · anomalías</span><span class="mono">ilustrativo</span></figcaption>
+    </figure>
+  </div>
+</div>
+
+<section id="proyecto">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">El proyecto</div><h2>Un motor para tres problemas de visión por computador</h2></div>
+      <p class="lead">El proyecto amplía los resultados del proyecto previo <b>CLODE</b> (clasificación, localización y detección de objetos) hacia tareas más complejas: asignar una clase a cada píxel (segmentación semántica), delimitar cada objeto individual (segmentación de instancias) y detectar imágenes anómalas dentro de un conjunto (detección de anomalías). Los sectores preferentes son la agricultura (viñedo), el medioambiente y la medicina.</p>
+    </div>
+    <div class="objs">
+      <div class="obj"><div class="n">01</div><h3>Integración</h3><p>Técnicas clásicas y de vanguardia para segmentación semántica, de instancias y detección de anomalías, bajo un mismo motor.</p></div>
+      <div class="obj"><div class="n">02</div><h3>Usabilidad</h3><p>Código abierto, bien documentado y con una API definida; asistente gráfico para usuarios no expertos.</p></div>
+      <div class="obj"><div class="n">03</div><h3>Datos</h3><p>Gestión de bancos de imágenes, aumento de datos (CLODSA), aprendizaje semi-supervisado y reducción del esfuerzo de anotación.</p></div>
+      <div class="obj"><div class="n">04</div><h3>Eficiencia</h3><p>Aprovechamiento de GPU y técnicas para reducir el coste de entrenamiento, como la poda del banco de datos o las mezclas de modelos.</p></div>
+      <div class="obj"><div class="n">05</div><h3>Extensibilidad</h3><p>Diseño preparado para incorporar nuevas técnicas y herramientas, incluso las que hoy están en investigación.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="herramientas">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Resultados · Descargas · Documentación</div><h2>Herramientas desarrolladas</h2></div>
+      <p class="lead">Todo el software es de código abierto y se puede descargar libremente. Cada repositorio incluye el código, la documentación y ejemplos de uso.</p>
+    </div>
+    <div class="tools" id="descargas">
+      <article class="tool main">
+        <div class="col">
+          <span class="tag">Motor principal · Segmentación</span>
+          <h3>SegDAn</h3>
+          <p>Framework para la construcción y evaluación automática de modelos de segmentación de imágenes. Acompaña al usuario en todo el flujo de trabajo: conversión de formatos, análisis y limpieza del banco de imágenes, partición de datos, entrenamiento y evaluación. Se puede usar mediante API o mediante un asistente gráfico para usuarios sin conocimientos de programación.</p>
+          <ol>
+            <li>Varios modelos de aprendizaje profundo, entre ellos los más punteros del área (U-Net, U-Net++, DeepLabV3+, SegFormer, DPT…).</li>
+            <li>Entrenamiento y comparación de varios modelos a la vez, con distintas métricas, para determinar el método ganador.</li>
+            <li>Análisis previo del banco de imágenes: número y tipo de objetos, objetos por imagen, área media y detección de imágenes incorrectas.</li>
+            <li>Reducción del banco por similitud de imágenes y aprendizaje activo <i>zero-shot</i> para reducir el esfuerzo de anotación.</li>
+            <li>Integración con CLODSA para el aumento de datos. Fácil de ampliar con nuevos modelos.</li>
+          </ol>
+        </div>
+        <div class="col">
+          <p><b>Instalación</b></p>
+          <pre class="install">pip install segdan</pre>
+          <p class="mono" style="font-size:.82rem">Licencia MIT · Python · PyPI</p>
+          <div class="links">
+            <a href="https://github.com/joortif/SegDAN">Repositorio y documentación</a>
+            <a href="https://pypi.org/project/segdan/">Paquete en PyPI</a>
+            <a href="https://doi.org/10.1007/978-3-032-02728-3_8">Artículo (IWANN 2025)</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="tool">
+        <span class="tag">Pocas imágenes anotadas</span>
+        <h3>Semi-Seg</h3>
+        <p>Framework de aprendizaje semi-supervisado para segmentación de imágenes basado en destilación de datos, de modelos y de ambos. Permite construir modelos a partir de un número limitado de imágenes etiquetadas.</p>
+        <div class="links"><a href="https://github.com/adines/SemiSeg">Repositorio</a><a href="https://doi.org/10.1016/j.neucom.2025.132266">Artículo (Neurocomputing)</a></div>
+      </article>
+
+      <article class="tool">
+        <span class="tag">Anotación</span>
+        <h3>SAMJ</h3>
+        <p>Plugin para ImageJ/Fiji que acelera la anotación de segmentación mediante distintas versiones de Segment Anything Model (SAM), orientado a biología y medicina. Desarrollado en colaboración internacional.</p>
+        <div class="links"><a href="https://github.com/segment-anything-models-java/SAMJ-IJ">Repositorio</a><a href="https://doi.org/10.1038/s41467-026-71752-x">Artículo (Nature Communications)</a></div>
+      </article>
+
+      <article class="tool">
+        <span class="tag">Eficiencia · Datos</span>
+        <h3>MedSAMPruning</h3>
+        <p>Librería de poda del banco de entrenamiento para segmentación semántica. Usa MedSAM para generar pseudomáscaras y estimar la relevancia de cada muestra, reduciendo el coste de entrenamiento sin perder rendimiento.</p>
+        <div class="links"><a href="https://github.com/joortif/MedSAMPruning">Repositorio</a><a href="https://jji-dmc.unirioja.es/edition/2526/83/">Comunicación (JJI DMC 25/26)</a></div>
+      </article>
+
+      <article class="tool">
+        <span class="tag">Eficiencia · Modelos</span>
+        <h3>SegSoup</h3>
+        <p>Librería para crear mezclas de modelos (<i>model soups</i>) de segmentación semántica, independientemente de la arquitectura (CNN o <i>vision transformers</i>). Reaprovecha los modelos intermedios del entrenamiento sin aumentar el coste de inferencia.</p>
+        <div class="links"><a href="https://github.com/joortif/SegSoup">Repositorio</a><a href="https://eurocast2026.fulp.es/documents/Extended_Abstract_Book.pdf">Comunicación (Eurocast 2026)</a></div>
+      </article>
+
+      <article class="tool">
+        <span class="tag">Detección de anomalías</span>
+        <h3>imgad</h3>
+        <p>Detección de anomalías en imagen de clase única con modelos fundacionales (CLIP, SigLIP, DINOv2…), detectores clásicos y Anomalib (PatchCore, PaDiM, EfficientAD), con mapas de anomalía por píxel, ejecución en paralelo en GPU, comparativas estadísticas y soporte para imagen médica (DICOM, NIfTI).</p>
+        <div class="links"><a href="https://joheras.github.io/imgad/">Documentación</a><a href="https://github.com/joheras/imgad">Repositorio</a><span class="mono" style="font-size:.8rem;color:var(--muted)">Apache-2.0</span></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="casos">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Transferencia</div><h2>Casos de uso</h2></div>
+      <p class="lead">Las técnicas del proyecto se han aplicado a problemas reales en colaboración con hospitales, centros de investigación y empresas.</p>
+    </div>
+    <div class="cases">
+      <div class="case"><h3>Viñedo</h3><p>Segmentación de hojas y racimos en imágenes RGB-D tomadas en campo por robot, estudiando el aporte de la información de profundidad.</p><div class="who">Con el Instituto de Sistemas y Tecnología Industrial Inteligente (CNR-STIIMA, Italia) · <a href="https://github.com/ancasag/segmentationVineyards">código</a></div></div>
+      <div class="case"><h3>Oftalmología</h3><p>Validación clínica de algoritmos para patologías retinianas y glaucoma, predicción de miopía infantil y detección de anomalías en retinografías.</p><div class="who">Con el Hospital Vall d'Hebron · <a href="https://github.com/joheras/imgad/blob/main/benchmarks/ophtalmology/report.md">benchmark</a></div></div>
+      <div class="case"><h3>Medioambiente y minería</h3><p>Clasificación de bioclastos en imágenes de microscopía de fuerza atómica; detección de defectos industriales sobre MVTec AD.</p><div class="who"><a href="https://github.com/joheras/imgad/blob/main/benchmarks/mvtec_4categories/report.md">benchmark MVTec</a></div></div>
+      <div class="case"><h3>Patología y oncología</h3><p>Segmentación semi-supervisada de pólipos y detección de anomalías en imágenes de citología.</p><div class="who">Con el Hospital Clínico Universitario Lozano Blesa</div></div>
+      <div class="case"><h3>Reproducción asistida</h3><p>Segmentación de las estructuras del blastocisto (trofoectodermo, masa celular interna y zona pelúcida).</p><div class="who">Con el Instituto de Investigación en Ingeniería de Aragón (I3A)</div></div>
+      <div class="case"><h3>Industria manufacturera</h3><p>Clasificación multiclase y multietiqueta de tareas de ensamblaje.</p><div class="who">Con CNR-STIIMA (Italia)</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="publicaciones">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Difusión científica</div><h2>Publicaciones</h2></div>
+      <p class="lead">Artículos en revista, actas de congreso y comunicaciones derivados del proyecto. Todos ellos reconocen la financiación ADER 2022-I-IDI-00015.</p>
+    </div>
+    <div class="filters" role="group" aria-label="Filtrar publicaciones">
+      <button type="button" data-f="all" aria-pressed="true">Todas</button>
+      <button type="button" data-f="revista" aria-pressed="false">Revista</button>
+      <button type="button" data-f="congreso" aria-pressed="false">Congreso</button>
+      <button type="button" data-f="jornadas" aria-pressed="false">Jornadas</button>
+    </div>
+    <ol class="pubs" id="pubs"></ol>
+  </div>
+</section>
+
+<section id="actividades">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Actividades · Congresos</div><h2>Actividades del proyecto</h2></div>
+      <p class="lead">El proyecto se ha desarrollado en tres iteraciones (segmentación semántica, segmentación de instancias y detección de anomalías), con la aplicación paralela a casos de uso y la presentación de los resultados en congresos y jornadas.</p>
+    </div>
+    <div class="grid2">
+      <ol class="tl">
+        <li><div class="d">2023-12</div><div class="e"><b>Inicio del proyecto</b><span>Concesión de la ayuda ADER y estudio bibliográfico de algoritmos y bancos de imágenes.</span></div></li>
+        <li><div class="d">2024-06</div><div class="e"><b>CAEPIA 2024 · A Coruña</b><span>Cuatro trabajos: viñedo, pólipos, blastocisto y tareas de ensamblaje.</span></div></li>
+        <li><div class="d">2024-10</div><div class="e"><b>Incorporación del tecnólogo</b><span>Desarrollo del motor SegDAn y de las librerías de eficiencia.</span></div></li>
+        <li><div class="d">2025-04</div><div class="e"><b>JJI DMC 24/25 · Logroño</b><span>Framework de aprendizaje semi-supervisado (Semi-Seg).</span></div></li>
+        <li><div class="d">2025-06</div><div class="e"><b>IWANN 2025 · A Coruña</b><span>Presentación del framework SegDAn.</span></div></li>
+        <li><div class="d">2026-02</div><div class="e"><b>Eurocast 2026 · Las Palmas</b><span>Mezclas de modelos para segmentación médica (SegSoup).</span></div></li>
+        <li><div class="d">2026-04</div><div class="e"><b>JJI DMC 25/26 · Logroño</b><span>Poda de bancos de datos con MedSAM (MedSAMPruning).</span></div></li>
+        <li><div class="d">2026-12</div><div class="e"><b>Cierre del proyecto</b><span>Publicación de imgad y difusión final de resultados.</span></div></li>
+      </ol>
+      <div>
+        <h3 style="margin-bottom:.6rem">Difusión a empresas y formación</h3>
+        <ul class="linklist">
+          <li><a href="https://seminariomirianandres.unirioja.es/">Seminario de Informática Mirian Andrés</a><span>Presentación semanal y abierta de los avances del grupo a toda la comunidad.</span></li>
+          <li><a href="https://jji-dmc.unirioja.es/">Jornadas de Jóvenes Investigadores del DMC</a><span>Universidad de La Rioja.</span></li>
+          <li>Docencia y tutorización<span>Grado en Ingeniería Informática, Máster en Ciencia de Datos y Aprendizaje Automático, prácticas en empresa y TFG/TFM, muchos de ellos en empresas riojanas.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="equipo">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Participantes</div><h2>Equipo</h2></div>
+      <p class="lead">Grupo de Informática del Departamento de Matemáticas y Computación de la Universidad de La Rioja.</p>
+    </div>
+    <div class="team">
+      <div class="person"><div class="avatar">CD</div><div><b>César Domínguez</b><span>Investigador responsable · coordinación</span></div></div>
+      <div class="person"><div class="avatar">JH</div><div><b>Jónathan Heras</b><span>Fase de segmentación semántica</span></div></div>
+      <div class="person"><div class="avatar">AI</div><div><b>Adrián Inés</b><span>Fase de segmentación de instancias</span></div></div>
+      <div class="person"><div class="avatar">VP</div><div><b>Vico Pascual</b><span>Fase de detección de anomalías</span></div></div>
+      <div class="person"><div class="avatar">GM</div><div><b>Gadea Mata</b><span>Fase de extensibilidad y optimización</span></div></div>
+      <div class="person"><div class="avatar">MG</div><div><b>Manuel García</b><span>Fase de cierre del proyecto</span></div></div>
+      <div class="person"><div class="avatar">EM</div><div><b>Eloy Mata</b><span>Fase de documentación</span></div></div>
+      <div class="person"><div class="avatar">JO</div><div><b>Joaquín Ortiz de Murua</b><span>Tecnólogo contratado</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="enlaces">
+  <div class="wrap grid2">
+    <div>
+      <div class="eyebrow">Enlaces de interés</div>
+      <h2 style="margin-bottom:1rem">Recursos relacionados</h2>
+      <ul class="linklist">
+        <li><a href="https://github.com/ancasag/clodsa">CLODSA</a><span>Aumento de datos para clasificación, detección y segmentación (proyecto CLODE).</span></li>
+        <li><a href="https://anomalib.readthedocs.io/">Anomalib</a><span>Biblioteca de detección de anomalías integrada en imgad.</span></li>
+        <li><a href="https://github.com/qubvel-org/segmentation_models.pytorch">Segmentation Models PyTorch</a><span>Base de los modelos de segmentación de SegDAn.</span></li>
+        <li><a href="https://huggingface.co/models">Hugging Face Hub</a><span>Modelos fundacionales usados como extractores de características.</span></li>
+      </ul>
+    </div>
+    <div id="contacto">
+      <div class="eyebrow">Contacto</div>
+      <h2 style="margin-bottom:1rem">¿Quieres aplicarlo en tu empresa?</h2>
+      <div class="contact">
+        <div><h3>Investigador responsable</h3><p>César Domínguez Pérez<br><a href="mailto:cesar.dominguez@unirioja.es">cesar.dominguez@unirioja.es</a></p></div>
+        <div><h3>Dirección</h3><p>Dpto. de Matemáticas y Computación<br>Universidad de La Rioja<br>Edificio CCT, C/ Madre de Dios 53<br>26006 Logroño (La Rioja)</p></div>
+        <div><h3>Incidencias y dudas técnicas</h3><p>Abre un <i>issue</i> en el repositorio de la herramienta correspondiente en GitHub.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="funding"><b>Financiación.</b> Proyecto «SegDAn: Motor para la segmentación semántica, la segmentación de instancias y la detección de anomalías en imágenes como soporte para la transformación digital de la industria», referencia <b>ADER 2022-I-IDI-00015</b>, financiado por la Agencia de Desarrollo Económico de La Rioja (ADER).</div>
+    <div>Universidad de La Rioja · 2023–2026<br>Contenido bajo licencia CC BY 4.0</div>
+  </div>
+</footer>
+
+<script>
+const PUBS = [
+ {y:2026,k:"revista",t:"SAMJ: fast image annotation on ImageJ/Fiji via segment anything model",a:"García-López-de-Haro, C., Fuster-Barceló, C., Rueden, C. T., Heras, J., Ulman, V., Franco-Barranco, D., et al., Muñoz-Barrutia, A.",v:"Nature Communications 17, 5402",d:"10.1038/s41467-026-71752-x"},
+ {y:2026,k:"revista",t:"Clinical validation of artificial intelligence algorithms for the detection of different central-involved retinal pathologies and glaucoma from non-mydriatic images",a:"Vidal-Alaball, J., Arocas Bonache, A., Solé-Casals, J., Royo Fibla, D., et al., Zapata, M. A.",v:"Frontiers in Artificial Intelligence 9, 1754682",d:"10.3389/frai.2026.1754682"},
+ {y:2026,k:"revista",t:"Parameter efficient vs full fine-tuning for building children's myopia prediction models",a:"Ros-Sánchez, E., Domínguez, C., Heras, J., Oliver-Gutiérrez, D., Royo, D., Espax, A. B., Zapata, M. Á.",v:"Systems and Soft Computing, 200452",d:"10.1016/j.sasc.2026.200452"},
+ {y:2026,k:"revista",t:"Comparative evaluation of deep learning architectures for bioclast classification in atomic force microscopy images",a:"Moya, A., Inés, A., Cedrón, F., Fernández-Lozano, C., Fernández-Martínez, A., Heras, J.",v:"Systems and Soft Computing, 200458",d:"10.1016/j.sasc.2026.200458"},
+ {y:2026,k:"congreso",t:"Towards Improving Medical Image Semantic Segmentation using Model Soups",a:"Ortiz de Murua, J., Inés, A., Heras, J.",v:"Eurocast 2026, Las Palmas de Gran Canaria",u:"https://eurocast2026.fulp.es/documents/Extended_Abstract_Book.pdf"},
+ {y:2026,k:"jornadas",t:"Dataset Pruning para segmentación semántica mediante MedSAM",a:"Ortiz de Murua, J.",v:"Jornadas de Jóvenes Investigadores del DMC 25/26, Logroño",u:"https://jji-dmc.unirioja.es/edition/2526/83/"},
+ {y:2025,k:"revista",t:"Semi-Seg: Semi-supervised learning framework for image segmentation",a:"Inés, A., Heras, J.",v:"Neurocomputing, 132266",d:"10.1016/j.neucom.2025.132266"},
+ {y:2025,k:"revista",t:"Anomaly detection applied to the classification of cytology images",a:"Marta, C. B., Doblaré, M., Heras, J., Mata, G., Ramírez, T.",v:"Biomedical Signal Processing and Control 105, 107625",d:"10.1016/j.bspc.2025.107625"},
+ {y:2025,k:"congreso",t:"Towards a Framework that Facilitates the Construction of Image Segmentation Models",a:"Ortiz de Murua, J., Domínguez, C., Heras, J., Pascual, V.",v:"IWANN 2025, LNCS 16009, pp. 98–108",d:"10.1007/978-3-032-02728-3_8"},
+ {y:2025,k:"jornadas",t:"Framework de aprendizaje semi-supervisado para la segmentación de imágenes",a:"Inés, A.",v:"Jornadas de Jóvenes Investigadores del DMC 24/25, Logroño",u:"https://jji-dmc.unirioja.es/edition/2425/50/"},
+ {y:2024,k:"congreso",t:"Taking Advantage of Depth Information for Semantic Segmentation in Field-Measured Vineyards",a:"Casado-García, Á., Heras, J., Marani, R., Milella, A.",v:"CAEPIA 2024, LNAI 14640, pp. 1–8",d:"10.1007/978-3-031-62799-6_1"},
+ {y:2024,k:"congreso",t:"Semi-supervised Learning Methods for Semantic Segmentation of Polyps",a:"Inés, A., Domínguez, C., Heras, J., Mata, E., Pascual, V.",v:"CAEPIA 2024, LNAI 14640, pp. 162–172",d:"10.1007/978-3-031-62799-6_17"},
+ {y:2024,k:"congreso",t:"Multi-class and Multi-label Classification of an Assembly Task in Manufacturing",a:"García-Domínguez, M., Heras, J., Marani, R., D'Orazio, T.",v:"CAEPIA 2024, LNAI 14640, pp. 204–212",d:"10.1007/978-3-031-62799-6_21"},
+ {y:2024,k:"congreso",t:"Image Processing and Deep Learning Methods for the Semantic Segmentation of Blastocyst Structures",a:"Villota, M., Ayensa-Jiménez, J., Doblaré, M., Heras, J.",v:"CAEPIA 2024, LNAI 14640, pp. 213–222",d:"10.1007/978-3-031-62799-6_22"}
+];
+const KL = {revista:"Revista",congreso:"Congreso",jornadas:"Jornadas"};
+const ol = document.getElementById("pubs");
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function render(f){
+  ol.innerHTML = PUBS.filter(p=>f==="all"||p.k===f).map(p=>{
+    const url = p.d ? "https://doi.org/"+p.d : p.u;
+    const link = p.d ? `DOI: <a href="${url}">${esc(p.d)}</a>` : `<a href="${url}">Enlace</a>`;
+    return `<li><span class="yr">${p.y}</span><div><div class="t">${esc(p.t)}</div><div class="a">${esc(p.a)}</div><div class="v">${esc(p.v)} · <span style="font-style:normal">${link}</span></div></div><span class="kind">${KL[p.k]}</span></li>`;
+  }).join("");
+}
+render("all");
+document.querySelectorAll(".filters button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".filters button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  render(b.dataset.f);
+}));
+const root=document.documentElement, KEY="segdan-theme";
+try{const s=localStorage.getItem(KEY); if(s) root.dataset.theme=s;}catch(e){}
+document.getElementById("themeBtn").addEventListener("click",()=>{
+  const dark = root.dataset.theme ? root.dataset.theme==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try{localStorage.setItem(KEY, root.dataset.theme);}catch(e){}
+});
+</script>
+</body>
+</html>
